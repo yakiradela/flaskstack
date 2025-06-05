@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: flaskstack
+    labels:
+        app: flaskstack
+spec:
+    selector:
+        app: flaskstack
+    ports:
+        - protocol: TCP
+          port: 80
+          targetPort: 5000
+    type: {{  if eq .Values.environment "prod" }}Loadbalancer{{ else }}ClusterIP{{ end }}                     
+    
