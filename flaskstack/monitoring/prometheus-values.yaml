@@ -1,0 +1,17 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    podMonitorSelector: {}
+    scrapeInterval: 30s
+    evalutionInterval: 30s
+    additionalScrapeConfigs:
+      - job_name: flaskstack-api
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['flaskstack-app.default.svc.cluter.local:5000']
+
+      - job_name: postgres-exporter
+        static_configs:
+          - targets: ['postgres-postgresql-ha-postgresql:9187']    
+        
