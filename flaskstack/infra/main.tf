@@ -17,6 +17,9 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
+  create_kms_key = false
+  kms_key_id     = aws_kms_key.eks.arn
+
   eks_managed_node_groups = {
     default = {
       min_size       = 1
