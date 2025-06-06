@@ -17,10 +17,6 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  # ניהול נפרד של KMS כדי למנוע שגיאת קונפליקט
-  create_kms_key = false
-  kms_key_id     = "arn:aws:kms:us-east-2:557690607676:alias/eks/eks-cluster"
-
   eks_managed_node_groups = {
     default = {
       min_size       = 1
