@@ -19,11 +19,11 @@ module "eks" {
 
   create_kms_key  = false
 
-  cluster_encryption_config = {
+  cluster_encryption_config = [{
     resources = ["secrets"]
     provider  = "aws"
     key_arn   = aws_kms_key.eks.arn
-  }
+  }]
 
   eks_managed_node_groups = {
     default = {
