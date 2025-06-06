@@ -18,12 +18,12 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  enable_cluster_encryption = true
+  create_kms_key = false
 
-  cluster_encryption_config = [{
+  cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
     resources        = ["secrets"]
-  }]
+  }
 
   eks_managed_node_groups = {
     default = {
