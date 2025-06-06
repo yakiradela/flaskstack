@@ -11,11 +11,15 @@ module "vpc" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.8.4" 
+  version         = "20.8.4"
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
+
+  # ניהול נפרד של KMS כדי למנוע שגיאת קונפליקט
+  create_kms_key = false
+  kms_key_id     = "arn:aws:kms:us-east-2:557690607676:alias/eks/eks-cluster"
 
   eks_managed_node_groups = {
     default = {
