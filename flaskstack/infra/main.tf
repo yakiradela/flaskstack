@@ -11,19 +11,19 @@ module "vpc" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "20.24.2"  # או גרסה גבוהה יותר
+  version         = "20.24.2"
+
   cluster_name    = var.cluster_name
   cluster_version = "1.29"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  create_kms_key  = false
+  enable_cluster_encryption = true
 
-  cluster_encryption_config = {
-    resources = ["secrets"]
-    provider  = "aws"
-    key_arn   = aws_kms_key.eks.arn
-  }
+  cluster_encryption_config = [{
+    provider_key_arn = aws_kms_key.eks.arn
+    resources        = ["secrets"]
+  }]
 
   eks_managed_node_groups = {
     default = {
