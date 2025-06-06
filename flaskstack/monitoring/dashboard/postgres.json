@@ -1,0 +1,27 @@
+ {
+  "title": "PostgreSQL Metrics",
+  "schemaVersion": 16,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Active Connections",
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count",
+          "legendFormat": "Connections"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Transactions per Second (Hit Ratio)",
+      "targets": [
+        {
+          "expr": "avg(pg_stat_database_blks_hit) / (avg(pg_stat_database_blks_hit) + avg(pg_stat_database_blks_read))",
+          "legendFormat": "Hit Ratio"
+        }
+      ]
+    }
+  ]
+}
