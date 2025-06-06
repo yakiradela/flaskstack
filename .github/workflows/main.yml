@@ -68,6 +68,8 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        env:
+          TF_WARN_OUTPUT_ERRORS: "0"
 
   docker:
     name: Build & Push Docker Image
