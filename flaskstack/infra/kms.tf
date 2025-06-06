@@ -4,6 +4,6 @@ resource "aws_kms_key" "eks" {
 }
 
 resource "aws_kms_alias" "eks" {
-  name          = "alias/flaskstack-eks-kms"
+  name          = "alias/Flaskstack-eks-kmsxyz123"
   target_key_id = aws_kms_key.eks.key_id
 }
