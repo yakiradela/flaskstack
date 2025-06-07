@@ -1,31 +1,3 @@
-module "vpc" {
-  source                 = "terraform-aws-modules/vpc/aws"
-  version                = "5.0.0"
-  name                   = "flaskstack-vpc"
-  cidr                   = "10.0.0.0/16"
-  azs                    = ["${var.aws_region}a", "${var.aws_region}b"]
-  public_subnets         = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets        = ["10.0.3.0/24", "10.0.4.0/24"]
-  enable_nat_gateway     = true
-  single_nat_gateway     = true
-  enable_dns_hostnames   = true
-
-  tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "Environment"                               = var.environment
-  }
-
-  public_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                    = "1"
-  }
-
-  private_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"           = "1"
-  }
-}
-
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "20.24.2"
@@ -39,7 +11,7 @@ module "eks" {
 
   cluster_endpoint_public_access          = true
   cluster_endpoint_private_access         = true
-  cluster_endpoint_public_access_cidrs    = ["0.0.0.0/0"] # מומלץ לשנות לטווח IP שלך בלבד
+  cluster_endpoint_public_access_cidrs    = ["0.0.0.0/0"] # מומלץ להגביל ל-IP שלך
 
   cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
@@ -55,12 +27,15 @@ module "eks" {
     }
   }
 
-  aws_auth_users = [
-    "arn:aws:iam::557690607676:user/flaskstack"
+  map_users = [
+    {
+      userarn  = "arn:aws:iam::557690607676:user/flaskstack"
+      username = "flaskstack"
+      groups   = ["system:masters"]
+    }
   ]
 
   tags = {
     "Environment" = var.environment
   }
 }
-
