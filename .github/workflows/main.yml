@@ -67,7 +67,7 @@ jobs:
         run: |
           aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
-          cat <<EOF | kubectl apply -f -
+          cat <<EOF | kubectl apply --validate=false -f -
           apiVersion: v1
           kind: ConfigMap
           metadata:
