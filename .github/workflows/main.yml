@@ -84,7 +84,7 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name eks-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
       - name: Install Helm
         run: |
@@ -112,7 +112,7 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name eks-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
       - name: Deploy PostgreSQL with Helm
         run: |
@@ -133,7 +133,7 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name eks-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
       - name: Deploy CronJob
         run: kubectl apply -f flaskstack/cronjobs/backup-job.yaml
@@ -151,7 +151,7 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name eks-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
       - name: Install Prometheus & Grafana via Helm
         run: |
