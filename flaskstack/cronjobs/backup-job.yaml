@@ -1,41 +1,46 @@
 apiVersion: batch/v1
-kind: Cronjob 
+kind: CronJob
 metadata:
-  name: postgres-buckup
-spec: 
+  name: postgres-backup
+spec:
   schedule: "0 */6 * * *"
   jobTemplate:
-    spec: 
+    spec:
       template:
-        spec: 
+        spec:
           containers:
-            - name: buckup 
-              image: postgres:14
+            - name: backup
+              image: bitnami/postgres:14  # תמונה עם postgres ויותר כלים, או לשלב awscli
               env:
-                - name: PGHOST 
-                  value: "postgres-postfresql-ha-postfresql"
+                - name: PGHOST
+                  value: "postgres-postgresql-ha-postgresql"  # תיקנתי את השם
                 - name: PGUSER
                   valueFrom:
                     secretKeyRef:
                       name: flaskstack-app-secret
-                      key: username 
-                - name: PGPASSWORD 
-                  valueFrom: 
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
                     secretKeyRef:
                       name: flaskstack-app-secret
-                      key: password 
+                      key: password
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
                     secretKeyRef:
-                      name: s3-buckup-secret
+                      name: s3-backup-secret
+                      key: awsAccessKeyId  # וודא שהמפתח נכון במפתח הסוד
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: s3-backup-secret
                       key: awsSecretAccessKey
                 - name: S3_BUCKET
-                  value: "db-backups" 
+                  value: "db-backups"
               command:
                 - /bin/sh
                 - -c
                 - |
                   export FILENAME=backup_$(date +%Y-%m-%d_%H-%M-%S).sql.gz
-                  pg_dump -U $PGUSER | gzip > /tmp/$FILENAME
+                  pg_dump -U $PGUSER -h $PGHOST | gzip > /tmp/$FILENAME
                   aws s3 cp /tmp/$FILENAME s3://$S3_BUCKET/$FILENAME
-          restartPolicy: OnFailure                                
+          restartPolicy: OnFailure
