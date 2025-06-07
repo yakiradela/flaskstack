@@ -37,9 +37,9 @@ module "eks" {
 
   create_kms_key = false
 
-  cluster_endpoint_public_access           = true
-  cluster_endpoint_private_access          = true
-  cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"] # מומלץ לשנות ל-IP שלך
+  cluster_endpoint_public_access          = true
+  cluster_endpoint_private_access         = true
+  cluster_endpoint_public_access_cidrs    = ["0.0.0.0/0"] # מומלץ לשנות לטווח IP שלך בלבד
 
   cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
@@ -55,7 +55,12 @@ module "eks" {
     }
   }
 
+  aws_auth_users = [
+    "arn:aws:iam::557690607676:user/flaskstack"
+  ]
+
   tags = {
     "Environment" = var.environment
   }
 }
+
