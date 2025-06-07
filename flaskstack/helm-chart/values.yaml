@@ -3,11 +3,11 @@ environment: dev
 global: 
   image: 
     repository: yakiradela/flaskstack
-    PullPolicy: IFNotPresent
+    pullPolicy: IfNotPresent
 
 environments:
   dev:
-    image: flaskstack
+    image:
       tag: latest
     replicaCount: 1
     resources:
@@ -16,7 +16,7 @@ environments:
         memory: "128Mi"
 
   staging:
-    image: flaskstack 
+    image:
       tag: staging-20240523
     replicaCount: 2
     resources:
@@ -29,7 +29,6 @@ env:
   POSTGRES_DB: app 
   POSTGRES_USER: user
   POSTGRES_PASSWORD: pass-from-secret
-
 
 ingress:
   enabled: true
