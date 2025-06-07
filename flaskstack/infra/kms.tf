@@ -1,10 +1,11 @@
-resource "aws_kms_key" "eks" {
-  description = "KMS for EKS cluster encryption"
-  enable_key_rotation = true
-}
-
 resource "random_id" "kms_alias_suffix" {
   byte_length = 4
+}
+
+resource "aws_kms_key" "eks" {
+  description             = "KMS key for Flaskstack"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "eks" {
