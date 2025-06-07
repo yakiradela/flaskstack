@@ -53,16 +53,13 @@ jobs:
     needs: infra
     steps:
       - uses: actions/checkout@v3
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
-
       - name: Ensure GitHub Actions has EKS access
         run: |
           IAM_ARN=$(aws sts get-caller-identity --query Arn --output text)
@@ -70,7 +67,7 @@ jobs:
 
           if ! kubectl get configmap aws-auth -n kube-system -o yaml | grep "$IAM_ARN"; then
             echo "User not found in aws-auth, updating it..."
-            cat <<EOF | kubectl apply --validate=false -f -
+            echo "
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -82,7 +79,7 @@ data:
       username: github-ci
       groups:
         - system:masters
-EOF
+" | kubectl apply --validate=false -f -
           else
             echo "IAM user already has access to the cluster"
           fi
