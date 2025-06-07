@@ -26,10 +26,6 @@ module "vpc" {
   }
 }
 
-resource "aws_kms_key" "eks" {
-  description = "KMS key for EKS secrets encryption"
-}
-
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "20.24.2"
@@ -41,14 +37,14 @@ module "eks" {
 
   create_kms_key = false
 
+  cluster_endpoint_public_access      = true
+  cluster_endpoint_private_access     = true
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"] # מומלץ לשנות לטווח ה-IP שלך בלבד
+
   cluster_encryption_config = {
-    provider_key_arn = aws_kms_key.eks.arn
+    provider_key_arn = aws_kms_key.eks.arn # מניח שהמפתח מוגדר במקום אחר
     resources        = ["secrets"]
   }
-
-  cluster_endpoint_public_access           = true
-  cluster_endpoint_private_access          = true
-  cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"]
 
   eks_managed_node_groups = {
     default = {
@@ -60,6 +56,7 @@ module "eks" {
   }
 
   tags = {
-    Environment = var.environment
+    "Environment" = var.environment
   }
 }
+
