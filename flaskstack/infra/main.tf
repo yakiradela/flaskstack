@@ -1,4 +1,3 @@
-
 module "vpc" {
   source                 = "terraform-aws-modules/vpc/aws"
   version                = "5.0.0"
@@ -50,6 +49,13 @@ module "eks" {
       desired_size   = var.node_count
       instance_types = ["t3.medium"]
     }
+  }
+
+  # כאן הוספתי את הגדרת הגישה ל-API:
+  access_config = {
+    endpoint_public_access  = true
+    endpoint_private_access = true
+    public_access_cidrs     = ["0.0.0.0/0"]  # אפשר להגביל לטווח IP שלך במקום 0.0.0.0/0
   }
 
   tags = {
