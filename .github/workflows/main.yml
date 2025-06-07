@@ -47,47 +47,12 @@ jobs:
       - run: terraform plan
       - run: terraform apply -auto-approve
 
-  eks-auth:
-    name: Configure EKS Access (aws-auth)
-    runs-on: ubuntu-latest
-    needs: infra
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
-      - name: Ensure GitHub Actions has EKS access
-        run: |
-          IAM_ARN=$(aws sts get-caller-identity --query Arn --output text)
-          echo "GitHub Actions is using IAM: $IAM_ARN"
-
-          if ! kubectl get configmap aws-auth -n kube-system -o yaml | grep "$IAM_ARN"; then
-            echo "User not found in aws-auth, updating it..."
-            echo "
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: aws-auth
-  namespace: kube-system
-data:
-  mapUsers: |
-    - userarn: $IAM_ARN
-      username: github-ci
-      groups:
-        - system:masters
-" | kubectl apply --validate=false -f -
-          else
-            echo "IAM user already has access to the cluster"
-          fi
+  # 🛑 שלב eks-auth הוסר לפי הבקשה שלך.
 
   docker:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: eks-auth
+    needs: infra
     steps:
       - uses: actions/checkout@v3
       - name: Login to Docker Hub
