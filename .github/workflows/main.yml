@@ -46,8 +46,6 @@ jobs:
       - run: terraform init -upgrade
       - run: terraform plan
       - run: terraform apply -auto-approve
-        env:
-          TF_WARN_OUTPUT_ERRORS: "0"
 
   eks-auth:
     name: Configure EKS Access (aws-auth)
@@ -63,7 +61,8 @@ jobs:
       - name: Update kubeconfig and apply aws-auth
         run: |
           aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
-          kubectl apply -f - <<EOF
+
+          cat <<EOF | kubectl apply -f -
           apiVersion: v1
           kind: ConfigMap
           metadata:
@@ -103,7 +102,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
       - name: Install Helm
-        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
