@@ -37,6 +37,10 @@ module "eks" {
 
   create_kms_key = false
 
+  cluster_endpoint_public_access           = true
+  cluster_endpoint_private_access          = true
+  cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"] # מומלץ לשנות ל-IP שלך
+
   cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
     resources        = ["secrets"]
@@ -51,15 +55,7 @@ module "eks" {
     }
   }
 
-  # כאן הוספתי את הגדרת הגישה ל-API:
-  access_config = {
-    endpoint_public_access  = true
-    endpoint_private_access = true
-    public_access_cidrs     = ["0.0.0.0/0"]  # אפשר להגביל לטווח IP שלך במקום 0.0.0.0/0
-  }
-
   tags = {
     "Environment" = var.environment
   }
 }
-
