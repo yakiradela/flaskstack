@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: deployment
+kind: Deployment
 metadata:
   name: flaskstack-dep
 spec:
@@ -12,22 +12,22 @@ spec:
       labels:
         app: flaskstack
     spec:
-        containers:
-            - name: flaskstack
-              image: "{{ .Values.global.image.repository }}:{{ .Values.environments.[.Values.environment].iamge.tag }}"
-              imagePullPolicy: "{{ .Values.global.image.imagePullpolicy }}"
-              ports:
-                - containerPort: 5000
-              envFrom:
-                - configMapRef:
-                    name: flaskstack
-              env:
-                - name: POSTGRES_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: flaskstack
-                      key: flaskstack
-              resources:
-                {{- toYaml .Values.environment.[.Values.environment].resources | nindent 12 }}
+      containers:
+        - name: flaskstack
+          image: "{{ .Values.global.image.repository }}:{{ index .Values.environments .Values.environment "image" "tag" }}"
+          imagePullPolicy: "{{ .Values.global.image.pullPolicy }}"
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: flaskstack
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: flaskstack
+                  key: flaskstack
+          resources:
+            {{- toYaml (index .Values.environments .Values.environment "resources") | nindent 12 }}
 
 
