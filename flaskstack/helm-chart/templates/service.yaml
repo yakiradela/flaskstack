@@ -11,5 +11,5 @@ spec:
         - protocol: TCP
           port: 80
           targetPort: 5000
-    type: {{  if eq .Values.environment "prod" }}Loadbalancer{{ else }}ClusterIP{{ end }}                     
+    type: {{  if eq .Values.environment "prod" }}LoadBalancer{{ else }}ClusterIP{{ end }}                     
     
