@@ -60,26 +60,32 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Identify current IAM identity
-        run: aws sts get-caller-identity
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
 
-      - name: Update kubeconfig and apply aws-auth
+      - name: Ensure GitHub Actions has EKS access
         run: |
-          aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+          IAM_ARN=$(aws sts get-caller-identity --query Arn --output text)
+          echo "GitHub Actions is using IAM: $IAM_ARN"
 
-          cat <<EOF | kubectl apply --validate=false -f -
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: aws-auth
-            namespace: kube-system
-          data:
-            mapUsers: |
-              - userarn: arn:aws:iam::557690607676:user/github-ci
-                username: github-ci
-                groups:
-                  - system:masters
-          EOF
+          if ! kubectl get configmap aws-auth -n kube-system -o yaml | grep "$IAM_ARN"; then
+            echo "User not found in aws-auth, updating it..."
+            cat <<EOF | kubectl apply --validate=false -f -
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: aws-auth
+              namespace: kube-system
+            data:
+              mapUsers: |
+                - userarn: $IAM_ARN
+                  username: github-ci
+                  groups:
+                    - system:masters
+            EOF
+          else
+            echo "IAM user already has access to the cluster"
+          fi
 
   docker:
     name: Build & Push Docker Image
