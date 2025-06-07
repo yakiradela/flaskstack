@@ -71,18 +71,18 @@ jobs:
           if ! kubectl get configmap aws-auth -n kube-system -o yaml | grep "$IAM_ARN"; then
             echo "User not found in aws-auth, updating it..."
             cat <<EOF | kubectl apply --validate=false -f -
-            apiVersion: v1
-            kind: ConfigMap
-            metadata:
-              name: aws-auth
-              namespace: kube-system
-            data:
-              mapUsers: |
-                - userarn: $IAM_ARN
-                  username: github-ci
-                  groups:
-                    - system:masters
-            EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapUsers: |
+    - userarn: $IAM_ARN
+      username: github-ci
+      groups:
+        - system:masters
+EOF
           else
             echo "IAM user already has access to the cluster"
           fi
