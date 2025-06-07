@@ -53,11 +53,16 @@ jobs:
     needs: infra
     steps:
       - uses: actions/checkout@v3
+
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Identify current IAM identity
+        run: aws sts get-caller-identity
+
       - name: Update kubeconfig and apply aws-auth
         run: |
           aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
@@ -70,8 +75,8 @@ jobs:
             namespace: kube-system
           data:
             mapUsers: |
-              - userarn: arn:aws:iam::557690607676:user/flaskstack
-                username: flaskstack
+              - userarn: arn:aws:iam::557690607676:user/github-ci
+                username: github-ci
                 groups:
                   - system:masters
           EOF
