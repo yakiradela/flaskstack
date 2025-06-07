@@ -1,7 +1,7 @@
 postgresql:
   username: user
   password: strong-password
-  database: app 
+  database: app
 
 replicaCount: 2
 
@@ -12,10 +12,10 @@ pgpool:
       cpu: 200m
       memory: 256Mi
 
-presistence:
+persistence:
   enabled: true
   size: 10Gi
-  strogeClass: gp2
+  storageClass: gp2
 
 metrics:
   enabled: true
@@ -27,10 +27,10 @@ metrics:
 
 resources:
   requests:
-    cpu: 250m 
-    memory: 512Mi 
+    cpu: 250m
+    memory: 512Mi
 
-tls: 
+tls:
   enabled: false
 
-existingSecret: ""  
+existingSecret: ""  # אם יש סוד קיים להזין כאן את שמו, אחרת ריק
