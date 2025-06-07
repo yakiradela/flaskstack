@@ -1,17 +1,23 @@
 variable "aws_region" {
-    default = "us-east-1"
+  description = "The AWS region to deploy in"
+  type        = string
+  default     = "us-east-2"
 }
 
 variable "cluster_name" {
-    default = "eks-cluster"  
+  description = "The name of the EKS cluster"
+  type        = string
+  default     = "flaskstack-cluster"
 }
 
 variable "node_count" {
-    default = 2 
+  description = "Desired number of nodes in the EKS cluster"
+  type        = number
+  default     = 2
 }
 
 variable "environment" {
-  description = "The deployment environment name (e.g. dev, staging, prod)"
+  description = "The deployment environment (e.g. dev, staging, prod)"
   type        = string
-  default     = "dev" 
+  default     = "dev"
 }
