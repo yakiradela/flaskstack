@@ -1,4 +1,4 @@
-name: CI/CD for Flaskstack 
+name: CI/CD for Flaskstack
 
 on:
   push:
