@@ -9,3 +9,9 @@ variable "cluster_name" {
 variable "node_count" {
     default = 2 
 }
+
+variable "environment" {
+  description = "The deployment environment name (e.g. dev, staging, prod)"
+  type        = string
+  default     = "dev" 
+}
