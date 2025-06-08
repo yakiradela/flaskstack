@@ -39,10 +39,10 @@ module "eks" {
 
   cluster_endpoint_public_access      = true
   cluster_endpoint_private_access     = true
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"] # מומלץ לשנות לטווח ה-IP שלך בלבד
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]  # מומלץ לצמצם לטווח IP שלך
 
   cluster_encryption_config = {
-    provider_key_arn = aws_kms_key.eks.arn # מניח שהמפתח מוגדר במקום אחר
+    provider_key_arn = aws_kms_key.eks.arn
     resources        = ["secrets"]
   }
 
@@ -55,8 +55,20 @@ module "eks" {
     }
   }
 
+  node_security_group_rules = [
+    {
+      type        = "ingress"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]  # ניתן לצמצם לטווח IP ספציפי
+      description = "Allow inbound HTTPS traffic"
+    }
+  ]
+
   tags = {
     "Environment" = var.environment
   }
 }
+
 
