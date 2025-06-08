@@ -25,7 +25,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init
-      - run: terraform plan
       - run: terraform apply -auto-approve
 
   infra:
@@ -44,11 +43,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -upgrade
-      - run: terraform plan
       - run: terraform apply -auto-approve
 
   eks-auth:
-    name: Apply AWS Auth ConfigMap
+    name: EKS Auth (map IAM user to system:masters)
     runs-on: ubuntu-latest
     needs: infra
     steps:
@@ -60,7 +58,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
       - name: Apply aws-auth ConfigMap
-        run: kubectl apply --validate=false -f flaskstack/helm-chart/aws-auth.yaml
+        run: kubectl apply -f flaskstack/helm-chart/aws-auth.yaml
 
   docker:
     name: Build & Push Docker Image
@@ -88,7 +86,8 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
       - name: Install Helm
-        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
