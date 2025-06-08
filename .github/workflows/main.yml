@@ -57,6 +57,12 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+      - name: Install kubectl v1.29
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
       - name: Apply aws-auth ConfigMap
         run: kubectl apply -f flaskstack/helm-chart/aws-auth.yaml
 
