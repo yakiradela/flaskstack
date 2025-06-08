@@ -37,9 +37,9 @@ module "eks" {
 
   create_kms_key = false
 
-  cluster_endpoint_public_access      = true
-  cluster_endpoint_private_access     = true
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]  # מומלץ לצמצם לטווח IP שלך
+  cluster_endpoint_public_access       = true
+  cluster_endpoint_private_access      = true
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
   cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
@@ -55,20 +55,18 @@ module "eks" {
     }
   }
 
-  node_security_group_rules = [
-    {
-      type        = "ingress"
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]  # ניתן לצמצם לטווח IP ספציפי
-      description = "Allow inbound HTTPS traffic"
-    }
-  ]
-
   tags = {
     "Environment" = var.environment
   }
 }
 
-
+# חוק לפתיחת פורט 443 ל-Node Group Security Group
+resource "aws_security_group_rule" "allow_https_inbound" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]  # מומלץ להצר בטווח IP מצומצם בהתאם לצורך
+  security_group_id = module.eks.node_security_group_id
+  description       = "Allow inbound HTTPS traffic to EKS nodes"
+}
