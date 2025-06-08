@@ -6,6 +6,7 @@ on:
 
 env:
   AWS_REGION: us-east-2
+  CLUSTER_NAME: flaskstack-cluster
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -69,7 +70,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Install Helm
         run: |
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -93,7 +94,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Deploy PostgreSQL with Helm
         run: |
           helm upgrade --install postgres ./flaskstack/postgres-chart \
@@ -111,7 +112,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Deploy CronJob
         run: kubectl apply -f flaskstack/cronjobs/backup-job.yaml
 
@@ -126,7 +127,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name Flaskstack-cluster
+      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Install Prometheus & Grafana via Helm
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
