@@ -55,18 +55,29 @@ module "eks" {
     }
   }
 
+  # ניהול aws-auth configmap
+  manage_aws_auth_configmap = true
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::557690607676:user/flaskstack"
+      username = "flaskstack"
+      groups   = ["system:masters"]
+    }
+  ]
+
   tags = {
     "Environment" = var.environment
   }
 }
 
-# חוק לפתיחת פורט 443 ל-Node Group Security Group
 resource "aws_security_group_rule" "allow_https_inbound" {
   type              = "ingress"
   from_port         = 443
   to_port           = 443
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]  # מומלץ להצר בטווח IP מצומצם בהתאם לצורך
+  cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = module.eks.node_security_group_id
   description       = "Allow inbound HTTPS traffic to EKS nodes"
 }
+
