@@ -31,7 +31,7 @@ module "eks" {
   version         = "20.24.2"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.29"
+  cluster_version = "1.32"  # ← עדכון לגרסה 1.32
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
@@ -39,7 +39,7 @@ module "eks" {
 
   cluster_endpoint_public_access        = true
   cluster_endpoint_private_access       = true
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+  cluster_endpoint_public_access_cidrs  = ["0.0.0.0/0"]
 
   cluster_encryption_config = {
     provider_key_arn = aws_kms_key.eks.arn
@@ -69,4 +69,3 @@ resource "aws_security_group_rule" "allow_https_inbound" {
   security_group_id = module.eks.node_security_group_id
   description       = "Allow inbound HTTPS traffic to EKS nodes"
 }
-
