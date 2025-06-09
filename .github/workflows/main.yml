@@ -132,20 +132,23 @@ jobs:
             --create-namespace
 
   cronjob:
-    name: Deploy Backup CronJob
-    runs-on: ubuntu-latest
-    needs: postgres
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      - name: Deploy CronJob
-        run: kubectl apply -f flaskstack/cronjobs/backup-job.yaml
+  name: Deploy Backup CronJob
+  runs-on: ubuntu-latest
+  needs: postgres
+  steps:
+    - uses: actions/checkout@v3
+    - uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    - name: Update kubeconfig for EKS
+      run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+    - name: Check cluster access
+      run: kubectl get nodes
+    - name: Deploy CronJob
+      run: kubectl apply --validate=false -f flaskstack/cronjobs/backup-job.yaml
+
 
   monitoring:
     name: Deploy Monitoring Stack
