@@ -70,10 +70,15 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      - name: Install Helm
+      - name: Configure kubeconfig
         run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          mkdir -p ~/.kube
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --kubeconfig ~/.kube/config
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+      - name: Install Helm
+        run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Verify cluster access
+        run: kubectl get nodes
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
@@ -94,7 +99,11 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --kubeconfig ~/.kube/config
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
       - name: Deploy PostgreSQL with Helm
         run: |
           helm upgrade --install postgres ./flaskstack/postgres-chart \
@@ -112,7 +121,11 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --kubeconfig ~/.kube/config
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
       - name: Deploy CronJob
         run: kubectl apply -f flaskstack/cronjobs/backup-job.yaml
 
@@ -127,12 +140,8 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      - name: Install Prometheus & Grafana via Helm
+      - name: Configure kubeconfig
         run: |
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo update
-          helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-            --namespace monitoring \
-            --create-namespace \
-            -f flaskstack/monitoring/prometheus-values.yaml
+          mkdir -p ~/.kube
+          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --kubeconfig ~/.kube/config
+          echo "
