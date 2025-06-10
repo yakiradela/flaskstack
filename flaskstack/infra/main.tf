@@ -55,29 +55,8 @@ module "eks" {
     }
   }
 
-    aws_auth = {
-    manage_aws_auth_configmap = true
-
-    map_users = [
-      {
-        userarn  = "arn:aws:iam::557690607676:user/flaskstack"
-        username = "flaskstack"
-        groups   = ["system:masters"]
-      }
-    ]
-  }
-
   tags = {
     "Environment" = var.environment
   }
 }
 
-resource "aws_security_group_rule" "allow_https_inbound" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = module.eks.node_security_group_id
-  description       = "Allow inbound HTTPS traffic to EKS nodes"
-}
