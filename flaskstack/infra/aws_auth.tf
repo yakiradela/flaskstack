@@ -7,7 +7,7 @@ module "aws_auth" {
 
   manage_aws_auth_configmap = true
 
-  map_users = [
+  aws_auth_users = [
     {
       userarn  = "arn:aws:iam::557690607676:user/flaskstack"
       username = "flaskstack"
