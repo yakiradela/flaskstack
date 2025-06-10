@@ -55,15 +55,17 @@ module "eks" {
     }
   }
 
-  manage_aws_auth_configmap = true
+    aws_auth = {
+    manage_aws_auth_configmap = true
 
-  map_users = [
-    {
-      userarn  = "arn:aws:iam::557690607676:user/flaskstack"
-      username = "flaskstack"
-      groups   = ["system:masters"]
-    }
-  ]
+    map_users = [
+      {
+        userarn  = "arn:aws:iam::557690607676:user/flaskstack"
+        username = "flaskstack"
+        groups   = ["system:masters"]
+      }
+    ]
+  }
 
   tags = {
     "Environment" = var.environment
