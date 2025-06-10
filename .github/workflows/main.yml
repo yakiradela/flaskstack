@@ -62,8 +62,6 @@ jobs:
           version: v1.29.0
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      - name: Check cluster access
-        run: kubectl get nodes
       - name: Apply aws-auth ConfigMap
         run: |
           cat <<EOF | kubectl apply --validate=false -f -
@@ -79,6 +77,8 @@ jobs:
                 groups:
                   - system:masters
           EOF
+      - name: Verify cluster access
+        run: kubectl get nodes
 
   docker:
     name: Build & Push Docker Image
@@ -104,6 +104,9 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Install Helm
@@ -128,6 +131,9 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Deploy PostgreSQL with Helm
@@ -147,10 +153,11 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-      - name: Check cluster access
-        run: kubectl get nodes
       - name: Deploy CronJob
         run: kubectl apply --validate=false -f flaskstack/cronjobs/backup-job.yaml
 
@@ -165,6 +172,9 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: v1.29.0
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - name: Install Prometheus & Grafana via Helm
@@ -175,4 +185,3 @@ jobs:
             --namespace monitoring \
             --create-namespace \
             -f flaskstack/monitoring/prometheus-values.yaml
-
