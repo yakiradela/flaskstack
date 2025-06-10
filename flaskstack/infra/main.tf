@@ -31,7 +31,7 @@ module "eks" {
   version         = "20.24.2"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.32"  # ← עדכון לגרסה 1.32
+  cluster_version = "1.32"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
@@ -54,6 +54,16 @@ module "eks" {
       instance_types = ["t3.medium"]
     }
   }
+
+  manage_aws_auth_configmap = true
+
+  map_users = [
+    {
+      userarn  = "arn:aws:iam::557690607676:user/flaskstack"
+      username = "flaskstack"
+      groups   = ["system:masters"]
+    }
+  ]
 
   tags = {
     "Environment" = var.environment
