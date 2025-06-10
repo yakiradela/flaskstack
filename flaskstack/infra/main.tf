@@ -1,4 +1,3 @@
-
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "5.0.0"
@@ -38,11 +37,12 @@ module "eks" {
 
   create_kms_key = false
 
-  cluster_endpoint_public_access        = true
-  cluster_endpoint_private_access       = true
-  cluster_endpoint_public_access_cidrs  = ["0.0.0.0/0"]
+  # תגדיר את זה כריק כי אין KMS key בשימוש
+  cluster_encryption_config = []
 
-  # הסרתי cluster_encryption_config כי aws_kms_key.eks לא מוגדר
+  cluster_endpoint_public_access       = true
+  cluster_endpoint_private_access      = true
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
   eks_managed_node_groups = {
     default = {
