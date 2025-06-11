@@ -73,6 +73,12 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Verify EKS Cluster
+        run: |
+          echo "🔍 Verifying EKS cluster '${{ env.CLUSTER_NAME }}' in region '${{ env.AWS_REGION }}'..."
+          aws eks describe-cluster --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} \
+            || (echo "❌ EKS cluster '${{ env.CLUSTER_NAME }}' not found!" && exit 1)
+
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
