@@ -33,3 +33,6 @@ env:
 ingress:
   enabled: true
   host: flaskstack.app.com
+
+awsAuth:
+  roleArn: arn:aws:iam::557690607676:user/flaskstack
