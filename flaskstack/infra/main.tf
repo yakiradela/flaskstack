@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "5.0.0"
@@ -35,9 +39,8 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  create_kms_key = false
-  cluster_encryption_config = []
-
+  create_kms_key                = false
+  cluster_encryption_config     = []
   cluster_endpoint_public_access       = true
   cluster_endpoint_private_access      = true
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
@@ -56,21 +59,4 @@ module "eks" {
   }
 }
 
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-
-  depends_on = [module.eks]  # ✅ כדי לחכות שהקלאסטר ייווצר
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-
-  depends_on = [module.eks]  # ✅ כדי לחכות שהקלאסטר ייווצר
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
 
