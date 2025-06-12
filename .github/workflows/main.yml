@@ -1,5 +1,5 @@
 name: CI/CD for Flaskstack
- 
+
 on:
   push:
     branches: [main]
@@ -29,8 +29,8 @@ jobs:
       - run: terraform init
       - run: terraform apply -auto-approve
 
-  infra:
-    name: Provision VPC + EKS
+  eks-cluster:
+    name: Provision VPC + EKS Cluster
     runs-on: ubuntu-latest
     needs: bootstrap
     defaults:
@@ -45,12 +45,41 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -upgrade
-      - run: terraform apply -auto-approve
+      - name: Apply only EKS cluster
+        run: terraform apply -auto-approve -target=module.eks
+
+  eks-auth:
+    name: Configure aws-auth
+    runs-on: ubuntu-latest
+    needs: eks-cluster
+    defaults:
+      run:
+        working-directory: flaskstack/infra
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
+      - name: Validate cluster connection
+        run: kubectl get nodes
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -upgrade
+      - name: Apply aws-auth config
+        run: terraform apply -auto-approve -target=module.aws_auth
 
   docker:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
-    needs: infra
+    needs: eks-auth
     steps:
       - uses: actions/checkout@v3
       - name: Login to Docker Hub
@@ -66,42 +95,27 @@ jobs:
     needs: docker
     steps:
       - uses: actions/checkout@v3
-
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Verify EKS Cluster
-        run: |
-          echo "🔍 Verifying EKS cluster '${{ env.CLUSTER_NAME }}' in region '${{ env.AWS_REGION }}'..."
-          aws eks describe-cluster --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} \
-            || (echo "❌ EKS cluster '${{ env.CLUSTER_NAME }}' not found!" && exit 1)
-
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
-
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
       - name: Update kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
       - name: Validate cluster access
         run: |
           kubectl get nodes
           kubectl cluster-info
-
-      - name: Deploy aws-auth ConfigMap
+      - name: Deploy aws-auth ConfigMap (if needed)
         run: |
-          kubectl apply -f flaskstack/helm-chart/templates/aws-auth.yaml
-
+          kubectl apply -f flaskstack/helm-chart/templates/aws-auth.yaml || echo "Skipping if already applied"
       - name: Deploy Flask App with Helm
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
