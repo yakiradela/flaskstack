@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
 data:
   mapUsers: |
-    - userarn: {{ .Values.awsAuth.roleArn }}
+    - userarn: {{ .Values.awsAuth.userArn }}
       username: github-actions
       groups:
         - system:masters
