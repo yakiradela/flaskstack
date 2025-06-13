@@ -70,10 +70,13 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
-      - name: Verify access to cluster (kubectl get nodes)
+      - name: Show kubeconfig (debug only!)
+        run: cat ~/.kube/config
+
+      - name: Verify access to cluster
         run: kubectl get nodes
 
-      - name: Map IAM user to aws-auth ConfigMap (if not exists)
+      - name: Map IAM user to aws-auth ConfigMap
         run: |
           USER_ARN="arn:aws:iam::557690607676:user/flaskstack"
           if ! kubectl get configmap aws-auth -n kube-system -o json | jq -e ".data.mapUsers | contains([\"- userarn: $USER_ARN\"])"; then
@@ -84,7 +87,7 @@ jobs:
               --username github-actions \
               --group system:masters || echo "Mapping may already exist"
           else
-            echo "IAM user already mapped in aws-auth ConfigMap"
+            echo "IAM user already mapped"
           fi
 
   docker:
