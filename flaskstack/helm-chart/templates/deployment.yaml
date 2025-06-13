@@ -1,33 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flaskstack-dep
+  name: {{ .Release.Name }}-dep
 spec:
   replicas: {{ index .Values.environments .Values.environment "replicaCount" }}
   selector:
     matchLabels:
-      app: flaskstack
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: flaskstack
+        app: {{ .Release.Name }}
     spec:
       containers:
         - name: flaskstack
           image: "{{ .Values.global.image.repository }}:{{ index .Values.environments .Values.environment "image" "tag" }}"
-          imagePullPolicy: "{{ .Values.global.image.pullPolicy }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           ports:
             - containerPort: 5000
           envFrom:
             - configMapRef:
-                name: flaskstack
+                name: {{ .Release.Name }}
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: flaskstack
+                  name: {{ .Release.Name }}
                   key: flaskstack
           resources:
             {{- toYaml (index .Values.environments .Values.environment "resources") | nindent 12 }}
-
 
