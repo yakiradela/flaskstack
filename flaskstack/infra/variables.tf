@@ -21,3 +21,9 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "ecr_repository_name" {
+  description = "The name of the ECR repository"
+  type        = string
+  default     = "flaskstack-ecr"
+}
