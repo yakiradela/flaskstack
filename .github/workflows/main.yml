@@ -58,11 +58,28 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - name: Install eksctl
+      - name: Install kubectl
         run: |
-          curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-          sudo mv /tmp/eksctl /usr/local/bin
-      - name: Map GitHub Actions IAM user to aws-auth
+          curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
+      - name: Check aws-auth ConfigMap for IAM User
+        run: |
+          echo "Checking if IAM user is mapped in aws-auth ConfigMap..."
+          USER_ARN="arn:aws:iam::557690607676:user/flaskstack"
+          kubectl get configmap aws-auth -n kube-system -o json > aws-auth.json
+          if ! jq -e --arg arn "$USER_ARN" '.data.mapUsers | contains([$arn])' aws-auth.json >/dev/null; then
+            echo "ERROR: IAM user $USER_ARN is NOT mapped in aws-auth ConfigMap"
+            echo "Please add the mapping before proceeding."
+            exit 1
+          else
+            echo "IAM user $USER_ARN is correctly mapped."
+          fi
+      - name: Map GitHub Actions IAM user to aws-auth (if needed)
         run: |
           eksctl create iamidentitymapping \
             --region ${{ env.AWS_REGION }} \
