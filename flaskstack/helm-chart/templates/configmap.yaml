@@ -1,11 +1,11 @@
 apiVersion: v1
-kind: configMap
+kind: ConfigMap
 metadata:
-  name: flaskstack
+  name: {{ .Release.Name }}
   labels:
-    app: flaskstack
+    app: {{ .Release.Name }}
 data:
-    ENVIRONMENT: {{ .Values.environment | quote}}
-    POSTGRES_DB: {{ .Values.env.POSTGRES_DB | quote }}
-    POSTGRES_HOST: {{ .Values.env.POSTGRES_USER | quote }}
-    POSTGRES_HOST: {{ .Values.env.POSTGRES_HOST | quote }}
+  ENVIRONMENT: {{ .Values.environment | quote }}
+  POSTGRES_DB: {{ .Values.env.POSTGRES_DB | quote }}
+  POSTGRES_USER: {{ .Values.env.POSTGRES_USER | quote }}
+  POSTGRES_HOST: {{ .Values.env.POSTGRES_HOST | quote }}
