@@ -1,29 +1,29 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: flaskstack-ingress
+  name: {{ .Release.Name }}-ingress
   annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: /
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-      {{- if eq .Values.environment "prod" }}
-      cert-manager.io/cluster-issuer: "letsencryptprod"
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      {{- end }}
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    {{- if eq .Values.environment "prod" }}
+    cert-manager.io/cluster-issuer: "letsencryptprod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    {{- end }}
 spec:
-  {{-if eq .Values.environment "prod" }}
+  {{- if eq .Values.environment "prod" }}
   tls:
-      - hosts:
-          - flaskstack.app.com
-        secretName: flaskstack-app-tls
-  {{-end }}
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Release.Name }}-tls
+  {{- end }}
   rules:
-      - host: flaskstack.app.com
-        http:
-          paths:
-            - path: /
-              pathType: Prefix
-              backend:
-                service:
-                  name: flaskstack
-                   port: 
-                      number: 80
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}
+                port:
+                  number: 80
