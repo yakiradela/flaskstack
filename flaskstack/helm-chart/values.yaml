@@ -1,8 +1,8 @@
 environment: dev
 
-global: 
-  image: 
-    repository: yakiradela/flaskstack
+global:
+  image:
+    repository: 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr
     pullPolicy: IfNotPresent
 
 environments:
@@ -24,11 +24,11 @@ environments:
         cpu: "250m"
         memory: "512Mi"
 
-env: 
+env:
   POSTGRES_HOST: postgresql
-  POSTGRES_DB: app 
+  POSTGRES_DB: app
   POSTGRES_USER: user
-  POSTGRES_PASSWORD: pass-from-secret
+  POSTGRES_PASSWORD: strong-password
 
 ingress:
   enabled: true
