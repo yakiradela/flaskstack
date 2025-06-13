@@ -34,8 +34,4 @@ ingress:
   enabled: true
   host: flaskstack.app.com
 
-awsAuth:
-  userarn: "arn:aws:iam::557690607676:user/flaskstack"
-  username: "github-actions"
-  group: "system:masters"
 
