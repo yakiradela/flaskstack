@@ -1,15 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-    name: flaskstack
-    labels:
-        app: flaskstack
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
 spec:
-    selector:
-        app: flaskstack
-    ports:
-        - protocol: TCP
-          port: 80
-          targetPort: 5000
-    type: {{  if eq .Values.environment "prod" }}LoadBalancer{{ else }}ClusterIP{{ end }}                     
-    
+  selector:
+    app: {{ .Release.Name }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: {{ if eq .Values.environment "prod" }}LoadBalancer{{ else }}ClusterIP{{ end }}
