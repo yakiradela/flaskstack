@@ -73,22 +73,24 @@ jobs:
       - name: Show kubeconfig (debug only!)
         run: cat ~/.kube/config
 
-      - name: Verify access to cluster
-        run: kubectl get nodes
-
       - name: Map IAM user to aws-auth ConfigMap
         run: |
           USER_ARN="arn:aws:iam::557690607676:user/flaskstack"
-          if ! kubectl get configmap aws-auth -n kube-system -o json | jq -e ".data.mapUsers | contains([\"- userarn: $USER_ARN\"])"; then
+          echo "Checking if IAM user is already mapped..."
+          if kubectl get configmap aws-auth -n kube-system -o yaml | grep -q "$USER_ARN"; then
+            echo "IAM user already mapped to aws-auth ConfigMap."
+          else
+            echo "Mapping IAM user to aws-auth ConfigMap..."
             eksctl create iamidentitymapping \
               --region ${{ env.AWS_REGION }} \
               --cluster ${{ env.CLUSTER_NAME }} \
               --arn $USER_ARN \
               --username github-actions \
-              --group system:masters || echo "Mapping may already exist"
-          else
-            echo "IAM user already mapped"
+              --group system:masters
           fi
+
+      - name: Verify access to cluster
+        run: kubectl get nodes
 
   docker:
     name: Build & Push Docker Image
