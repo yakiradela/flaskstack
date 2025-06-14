@@ -13,7 +13,6 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::557690607676:role/yakir
 
 jobs:
-  # שלב 1: Bootstrap (S3 + DynamoDB עם Terraform)
   bootstrap:
     name: Terraform Bootstrap (S3 + DynamoDB)
     runs-on: ubuntu-latest
@@ -22,18 +21,15 @@ jobs:
         working-directory: flaskstack/infra/bootstrap
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init
       - run: terraform apply -auto-approve
 
-  # שלב 2: Provision VPC + EKS
   infra:
     name: Provision VPC + EKS
     runs-on: ubuntu-latest
@@ -43,102 +39,82 @@ jobs:
         working-directory: flaskstack/infra
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -upgrade
       - run: terraform apply -auto-approve
 
-  # שלב 3: Setup kubeconfig & verify cluster access
   auth:
     name: Setup Kubeconfig and Test Access
     runs-on: ubuntu-latest
     needs: infra
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
       - name: Verify Cluster Access
         run: kubectl get nodes
 
-  # שלב 4: Build & Push Docker image to ECR
   docker:
     name: Build and Push Docker Image to Amazon ECR
     runs-on: ubuntu-latest
     needs: auth
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Create ECR Repository if Not Exists
         run: |
           aws ecr describe-repositories --repository-names ${{ env.ECR_REPO_NAME }} || \
           aws ecr create-repository --repository-name ${{ env.ECR_REPO_NAME }}
-
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region $AWS_REGION | \
-          docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
       - name: Build Docker Image
-        run: docker build -t $ECR_REPO_NAME:latest ./flaskstack/Docker
-
+        run: docker build -t ${{ env.ECR_REPO_NAME }}:latest ./flaskstack/Docker
       - name: Tag Docker Image
-        run: docker tag $ECR_REPO_NAME:latest ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
-
+        run: docker tag ${{ env.ECR_REPO_NAME }}:latest ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
       - name: Push Docker Image to ECR
         run: docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
 
-  # שלב 5: Deploy Flaskstack App to EKS with Helm
   deploy:
     name: Deploy Flaskstack to EKS with Helm
     runs-on: ubuntu-latest
     needs: docker
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Install kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
-
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
       - name: Deploy Flaskstack Helm Chart
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
@@ -147,69 +123,54 @@ jobs:
             --set environments.dev.image.tag=latest \
             --wait
 
-  # שלב 6: Deploy PostgreSQL Helm Chart
   postgres:
     name: Deploy PostgreSQL
     runs-on: ubuntu-latest
     needs: deploy
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
       - name: Deploy PostgreSQL Helm Chart
         run: |
           helm upgrade --install postgres ./flaskstack/postgres-chart \
             --namespace default \
             --create-namespace
 
-  # שלב 7: Deploy CronJob Backup
   cronjob:
     name: Deploy Backup CronJob
     runs-on: ubuntu-latest
     needs: postgres
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
       - name: Apply Backup CronJob YAML
         run: kubectl apply --validate=false -f flaskstack/cronjobs/backup-job.yaml
 
-  # שלב 8: (אופציונלי) Deploy Monitoring Stack
   monitoring:
     name: Deploy Monitoring Stack (Prometheus, Grafana, וכו')
     runs-on: ubuntu-latest
     needs: cronjob
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure AWS Credentials via OIDC Role
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
       - name: Install Prometheus and Monitoring Tools
         run: |
-          # הוסף פה פקודות להתקנת Prometheus או כל stack מוניטורינג אחר שתרצה
           echo "TODO: Install Monitoring stack"
-
-
