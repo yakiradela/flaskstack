@@ -1,3 +1,40 @@
+variable "aws_region" {
+  description = "The AWS region to deploy in"
+  type        = string
+  default     = "us-east-2"
+}
+
+variable "cluster_name" {
+  description = "The name of the EKS cluster"
+  type        = string
+  default     = "Flaskstack-cluster"
+}
+
+variable "node_count" {
+  description = "Desired number of nodes in the EKS cluster"
+  type        = number
+  default     = 2
+}
+
+variable "environment" {
+  description = "The deployment environment (e.g. dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "aws_account_id" {
+  description = "The AWS account ID used for IAM and EKS access entry"
+  type        = string
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = var.cluster_name
+}
+
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "5.0.0"
@@ -43,6 +80,14 @@ module "eks" {
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
+  map_users = [
+    {
+      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+      username = "github-actions"
+      groups   = ["system:masters"]
+    }
+  ]
+
   eks_managed_node_groups = {
     default = {
       min_size       = 1
@@ -61,31 +106,6 @@ provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-  load_config_file       = false
 }
 
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-}
-
-resource "kubernetes_config_map" "aws_auth" {
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-
-  data = {
-    mapUsers = yamlencode([
-      {
-        userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
-        username = "github-actions"
-        groups   = ["system:masters"]
-      }
-    ])
-  }
-}
 
