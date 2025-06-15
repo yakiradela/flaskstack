@@ -1,6 +1,7 @@
 module "vpc" {
-  source               = "terraform-aws-modules/vpc/aws"
-  version              = "5.0.0"
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.0.0"
+
   name                 = "flaskstack-vpc"
   cidr                 = "10.0.0.0/16"
   azs                  = ["${var.aws_region}a", "${var.aws_region}b"]
@@ -35,21 +36,12 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  create_kms_key                    = false
-  cluster_encryption_config         = []
-  cluster_endpoint_public_access    = true
-  cluster_endpoint_private_access   = true
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
-
-  authentication_mode = "API_AND_CONFIG_MAP"
-
-  map_users = [
-    {
-      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
-      username = "github-actions"
-      groups   = ["system:masters"]
-    }
-  ]
+  create_kms_key                        = false
+  cluster_encryption_config             = []
+  cluster_endpoint_public_access        = true
+  cluster_endpoint_private_access       = true
+  cluster_endpoint_public_access_cidrs  = ["0.0.0.0/0"]
+  authentication_mode                   = "API"
 
   eks_managed_node_groups = {
     default = {
@@ -65,10 +57,10 @@ module "eks" {
   }
 }
 
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
+resource "aws_eks_access_entry" "github_actions_user" {
+  cluster_name      = module.eks.cluster_name
+  principal_arn     = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+  kubernetes_groups = ["admin"] # שים לב! לא system:masters
+  type              = "STANDARD"
 }
-
 
