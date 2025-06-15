@@ -41,6 +41,8 @@ module "eks" {
   cluster_endpoint_private_access   = true
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
+  authentication_mode = "API_AND_CONFIG_MAP"
+
   eks_managed_node_groups = {
     default = {
       min_size       = 1
@@ -50,18 +52,14 @@ module "eks" {
     }
   }
 
-  # ✅ הוספת המיפוי של המשתמש ל־aws-auth
-  manage_aws_auth_configmap = true
-
-  aws_auth_users = [
-    {
-      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
-      username = "flaskstack"
-      groups   = ["system:masters"]
-    }
-  ]
-
   tags = {
     "Environment" = var.environment
   }
+}
+
+resource "aws_eks_access_entry" "github_actions_user" {
+  cluster_name      = module.eks.cluster_name
+  principal_arn     = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+  kubernetes_groups = ["system:masters"]
+  type              = "STANDARD"
 }
