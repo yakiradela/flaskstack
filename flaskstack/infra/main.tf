@@ -43,14 +43,6 @@ module "eks" {
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
-  map_users = [
-    {
-      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
-      username = "github-actions"
-      groups   = ["system:masters"]
-    }
-  ]
-
   eks_managed_node_groups = {
     default = {
       min_size       = 1
@@ -62,6 +54,38 @@ module "eks" {
 
   tags = {
     "Environment" = var.environment
+  }
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+  load_config_file       = false
+}
+
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_name
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+}
+
+resource "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapUsers = yamlencode([
+      {
+        userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+        username = "github-actions"
+        groups   = ["system:masters"]
+      }
+    ])
   }
 }
 
