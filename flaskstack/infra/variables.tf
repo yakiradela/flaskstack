@@ -27,3 +27,8 @@ variable "ecr_repository_name" {
   type        = string
   default     = "flaskstack-ecr"
 }
+
+variable "aws_account_id" {
+  description = "The AWS account ID used for IAM and EKS access entry"
+  type        = string
+}
