@@ -27,18 +27,18 @@ module "vpc" {
 }
 
 module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  version         = "20.24.2"
+  source  = "terraform-aws-modules/eks/aws"
+  version = "20.24.2"
 
   cluster_name    = var.cluster_name
   cluster_version = "1.32"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
-  create_kms_key                = false
-  cluster_encryption_config     = []
-  cluster_endpoint_public_access       = true
-  cluster_endpoint_private_access      = true
+  create_kms_key                    = false
+  cluster_encryption_config         = []
+  cluster_endpoint_public_access    = true
+  cluster_endpoint_private_access   = true
   cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
   eks_managed_node_groups = {
@@ -50,9 +50,18 @@ module "eks" {
     }
   }
 
+  # ✅ הוספת המיפוי של המשתמש ל־aws-auth
+  manage_aws_auth_configmap = true
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+      username = "flaskstack"
+      groups   = ["system:masters"]
+    }
+  ]
+
   tags = {
     "Environment" = var.environment
   }
 }
-
-
