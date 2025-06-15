@@ -43,6 +43,14 @@ module "eks" {
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
+  map_users = [
+    {
+      userarn  = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
+      username = "github-actions"
+      groups   = ["system:masters"]
+    }
+  ]
+
   eks_managed_node_groups = {
     default = {
       min_size       = 1
@@ -57,9 +65,3 @@ module "eks" {
   }
 }
 
-resource "aws_eks_access_entry" "github_actions_user" {
-  cluster_name      = module.eks.cluster_name
-  principal_arn     = "arn:aws:iam::${var.aws_account_id}:user/flaskstack"
-  kubernetes_groups = ["system:masters"]
-  type              = "STANDARD"
-}
