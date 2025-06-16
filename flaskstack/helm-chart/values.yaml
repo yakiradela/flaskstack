@@ -41,3 +41,15 @@ awsAuth:
       groups:
         - "system:masters"
 
+rbac:
+  clusterRoleBinding:
+    enabled: true
+    name: flaskstack-admin-binding
+    subjects:
+      - kind: User
+        name: flaskstack       # זה שם המשתמש בקוברנטיס (מתאים למה שמוגדר ב-aws-auth)
+        apiGroup: rbac.authorization.k8s.io
+    roleRef:
+      kind: ClusterRole
+      name: cluster-admin
+      apiGroup: rbac.authorization.k8s.io
