@@ -34,4 +34,10 @@ ingress:
   enabled: true
   host: flaskstack.app.com
 
+awsAuth:
+  mapUsers:
+    - userarn: "arn:aws:iam::557690607676:user/flaskstack"
+      username: "flaskstack"
+      groups:
+        - "system:masters"
 
