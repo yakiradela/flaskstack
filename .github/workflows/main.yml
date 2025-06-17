@@ -10,6 +10,7 @@ env:
   AWS_ACCOUNT_ID: 557690607676
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  ECR_REPO_NAME: flaskstack-ecr
 
 jobs:
   bootstrap:
@@ -70,6 +71,8 @@ jobs:
           helm template flaskstack ./flaskstack/helm-chart --show-only templates/aws-auth.yaml > aws-auth.yaml
       - name: Apply aws-auth ConfigMap
         run: kubectl apply -f aws-auth.yaml
+      - name: Check Permissions
+        run: kubectl auth can-i get configmap/aws-auth -n kube-system
       - name: Verify access
         run: kubectl get nodes
 
