@@ -61,26 +61,37 @@ jobs:
     needs: docker
     steps:
       - uses: actions/checkout@v3
+
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Install eksctl
         run: |
           curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
+
       - name: Generate kubeconfig via eksctl
+        run: eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+
+      - name: Verify cluster connection
         run: |
-          eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+          echo "Verifying cluster access..."
+          kubectl version --short
+          kubectl get nodes
+
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
       - name: Deploy aws-auth ConfigMap
         run: |
           helm upgrade --install aws-auth ./flaskstack/helm-chart \
             --namespace kube-system \
             --set awsAuth.roleArn=arn:aws:iam::557690607676:user/flaskstack \
             --wait
+
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
@@ -143,4 +154,3 @@ jobs:
             --namespace monitoring \
             --create-namespace \
             -f flaskstack/monitoring/prometheus-values.yaml
-
