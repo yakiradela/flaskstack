@@ -78,10 +78,9 @@ jobs:
 
       - name: Verify cluster connection with eksctl
         run: |
-          echo "Verifying cluster access with eksctl..."
+          echo "Verifying EKS cluster connectivity..."
           eksctl get cluster --region ${{ env.AWS_REGION }}
           eksctl get nodegroup --cluster ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
-
 
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
