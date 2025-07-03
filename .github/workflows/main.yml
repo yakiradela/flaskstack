@@ -73,14 +73,11 @@ jobs:
           curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
 
-      - name: Generate kubeconfig via eksctl
-        run: |
-          eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+      - name: Generate kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
-      - name: Validate connection via eksctl
-        run: |
-          eksctl get cluster --region ${{ env.AWS_REGION }}
-          eksctl get nodegroup --cluster ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      - name: Validate kubectl connection
+        run: kubectl get nodes
 
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -89,7 +86,12 @@ jobs:
         run: |
           helm upgrade --install aws-auth ./flaskstack/helm-chart \
             --namespace kube-system \
-            --values flaskstack/helm-chart/values.yaml \
+            --set awsAuth.mapUsers[0].userarn=arn:aws:iam::557690607676:user/flaskstack \
+            --set awsAuth.mapUsers[0].username=flaskstack \
+            --set awsAuth.mapUsers[0].groups[0]=system:masters \
+            --set awsAuth.mapRoles[0].rolearn=arn:aws:iam::557690607676:role/eks-nodegroup-role \
+            --set awsAuth.mapRoles[0].groups[0]=system:bootstrappers \
+            --set awsAuth.mapRoles[0].groups[1]=system:nodes \
             --wait
 
       - name: Deploy Flask App
@@ -113,9 +115,8 @@ jobs:
         run: |
           curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
-      - name: Generate kubeconfig via eksctl
-        run: |
-          eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+      - name: Generate kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
       - name: Deploy PostgreSQL
         run: |
           helm upgrade --install postgres ./flaskstack/postgres-chart \
@@ -136,9 +137,8 @@ jobs:
         run: |
           curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
-      - name: Generate kubeconfig via eksctl
-        run: |
-          eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+      - name: Generate kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
       - name: Apply CronJob
         run: |
           helm upgrade --install cronjob-backup flaskstack/cronjobs \
@@ -158,9 +158,8 @@ jobs:
         run: |
           curl --silent --location "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
           sudo mv /tmp/eksctl /usr/local/bin
-      - name: Generate kubeconfig via eksctl
-        run: |
-          eksctl utils write-kubeconfig --region ${{ env.AWS_REGION }} --cluster ${{ env.CLUSTER_NAME }}
+      - name: Generate kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
       - name: Install Monitoring Stack
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
