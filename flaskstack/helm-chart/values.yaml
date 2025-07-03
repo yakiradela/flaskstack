@@ -35,11 +35,17 @@ ingress:
   host: flaskstack.app.com
 
 awsAuth:
+  mapRoles:
+    - rolearn: "arn:aws:iam::557690607676:role/eks-nodegroup-role"
+      groups:
+        - "system:bootstrappers"
+        - "system:nodes"
   mapUsers:
     - userarn: "arn:aws:iam::557690607676:user/flaskstack"
       username: "flaskstack"
       groups:
         - "system:masters"
+
 
 rbac:
   clusterRoleBinding:
