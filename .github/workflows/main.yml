@@ -89,16 +89,14 @@ jobs:
         run: |
           helm upgrade --install aws-auth ./flaskstack/helm-chart \
             --namespace kube-system \
-            --set awsAuth.roleArn=arn:aws:iam::557690607676:user/flaskstack \
+            --values flaskstack/helm-chart/values.yaml \
             --wait
 
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
             --namespace default \
-            --set global.image.repository=yakiradela/flaskstack \
-            --set environments.dev.image.tag=latest \
-            --set environment=dev \
+            --values flaskstack/helm-chart/values.yaml \
             --wait
 
   postgres:
