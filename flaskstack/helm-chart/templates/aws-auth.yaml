@@ -4,6 +4,15 @@ metadata:
   name: aws-auth
   namespace: kube-system
 data:
+  mapRoles: |
+{{- range .Values.awsAuth.mapRoles }}
+    - rolearn: {{ .rolearn | quote }}
+      username: {{ .username | default "system:node:{{EC2PrivateDNSName}}" | quote }}
+      groups:
+{{- range .groups }}
+        - {{ . | quote }}
+{{- end }}
+{{- end }}
   mapUsers: |
 {{- range .Values.awsAuth.mapUsers }}
     - userarn: {{ .userarn | quote }}
@@ -13,4 +22,3 @@ data:
         - {{ . | quote }}
 {{- end }}
 {{- end }}
-
