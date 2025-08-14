@@ -1,4 +1,4 @@
-name: CI/CD for Flaskstack 
+name: CI/CD for Flaskstack
 
 on:
   push:
@@ -33,6 +33,8 @@ jobs:
     defaults:
       run:
         working-directory: flaskstack/infra
+    outputs:
+      ecr_url: ${{ steps.ecr.outputs.url }}
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/configure-aws-credentials@v2
@@ -42,7 +44,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -upgrade
-      - run: terraform apply 
+      - run: terraform apply -auto-approve
+      - name: Get ECR Repository URL
+        id: ecr
+        run: echo "url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
 
   docker:
     runs-on: ubuntu-latest
@@ -51,15 +56,13 @@ jobs:
       - uses: actions/checkout@v3
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region us-east-2 \
-          | docker login --username AWS --password-stdin 557690607676.dkr.ecr.us-east-2.amazonaws.com
-
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} \
+          | docker login --username AWS --password-stdin ${{ needs.infra.outputs.ecr_url }}
       - name: Build, tag, and push image to ECR
         run: |
-         docker build -t flaskstack-ecr -f flaskstack/Docker/Dockerfile flaskstack/Docker
-         docker tag flaskstack-ecr:latest 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
-         docker push 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
-
+          docker build -t flaskstackecr -f flaskstack/Docker/Dockerfile flaskstack/Docker
+          docker tag flaskstackecr:latest ${{ needs.infra.outputs.ecr_url }}:latest
+          docker push ${{ needs.infra.outputs.ecr_url }}:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -71,10 +74,8 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
       - name: Generate kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-      
       - name: Deploy aws-auth ConfigMap
         run: |
           helm upgrade --install aws-auth ./flaskstack/helm-chart \
@@ -86,13 +87,10 @@ jobs:
             --set awsAuth.mapRoles[0].groups[0]=system:bootstrappers \
             --set awsAuth.mapRoles[0].groups[1]=system:nodes \
             --wait
-
       - name: Validate kubectl connection
         run: kubectl get nodes
-
       - name: Install Helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      
       - name: Deploy Flask App
         run: |
           helm upgrade --install flaskstack ./flaskstack/helm-chart \
