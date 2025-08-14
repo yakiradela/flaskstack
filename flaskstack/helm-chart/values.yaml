@@ -1,7 +1,7 @@
 environment: dev
 
 global:
-  image:
+  image: flaskstack:latest
     repository: 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr
     pullPolicy: IfNotPresent
 
