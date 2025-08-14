@@ -60,8 +60,7 @@ jobs:
           | docker login --username AWS --password-stdin ${{ needs.infra.outputs.ecr_url }}
       - name: Build, tag, and push image to ECR
         run: |
-          docker build -t flaskstackecr -f flaskstack/Docker/Dockerfile flaskstack/Docker
-          docker tag flaskstackecr:latest ${{ needs.infra.outputs.ecr_url }}:latest
+          docker build -t ${{ needs.infra.outputs.ecr_url }}:latest -f flaskstack/Docker/Dockerfile flaskstack/Docker
           docker push ${{ needs.infra.outputs.ecr_url }}:latest
 
   deploy:
