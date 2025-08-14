@@ -42,7 +42,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init -upgrade
-      - run: terraform apply -auto-approve -target=module.vpc -target=module.eks
+      - run: terraform apply 
 
   docker:
     runs-on: ubuntu-latest
@@ -56,9 +56,10 @@ jobs:
 
       - name: Build, tag, and push image to ECR
         run: |
-          docker build -t flaskstack-ecr .
-          docker tag flaskstack-ecr:latest 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
-          docker push 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
+         docker build -t flaskstack-ecr -f flaskstack/Docker/Dockerfile flaskstack/Docker
+         docker tag flaskstack-ecr:latest 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
+         docker push 557690607676.dkr.ecr.us-east-2.amazonaws.com/flaskstack-ecr:latest
+
 
   deploy:
     runs-on: ubuntu-latest
