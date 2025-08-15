@@ -56,8 +56,8 @@ jobs:
           | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
       - name: Build, tag, and push image to ECR
         run: |
-          docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/flaskstack:latest -f flaskstack/Docker/Dockerfile flaskstack/Docker
-          docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/flaskstack:latest
+         docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/flaskstack-ecr:latest -f flaskstack/Docker/Dockerfile flaskstack/Docker
+         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/flaskstack-ecr:latest
 
   deploy:
     runs-on: ubuntu-latest
