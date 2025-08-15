@@ -46,7 +46,6 @@ awsAuth:
       groups:
         - "system:masters"
 
-
 rbac:
   clusterRoleBinding:
     enabled: true
