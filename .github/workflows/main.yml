@@ -77,32 +77,7 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Generate kubeconfig
-        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
-
-      - name: Deploy aws-auth ConfigMap (only if needed)
-        run: |
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: aws-auth
-            namespace: kube-system
-          data:
-            mapUsers: |
-              - userarn: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:user/flaskstack
-                username: flaskstack
-                groups:
-                  - system:masters
-            mapRoles: |
-              - rolearn: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/eks-nodegroup-role
-                username: system:node:{{EC2PrivateDNSName}}
-                groups:
-                  - system:bootstrappers
-                  - system:nodes
-          EOF
-
-      - name: Validate kubectl connection
-        run: kubectl get nodes
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }
 
       - name: Deploy Flask App
         run: |
